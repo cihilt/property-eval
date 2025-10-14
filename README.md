@@ -11,6 +11,9 @@ A comprehensive property intelligence dashboard that displays property data, pri
 - **Area Demographics**: Visual breakdown of ethnic demographics in surrounding areas
 - **Sales History**: Detailed table of all property transactions
 
+<img width="1070" height="828" alt="image" src="https://github.com/user-attachments/assets/614c312b-7647-44f9-a471-b01063bc2153" />
+
+
 ## Installation
 
 1. Install dependencies:
