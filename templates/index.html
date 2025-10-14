@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property Intelligence Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .demo-note {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        .demo-id {
+            font-family: monospace;
+            background: rgba(0,0,0,0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .search-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+            color: #667eea;
+            display: none;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .error {
+            background: #ff4444;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error.active {
+            display: block;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .property-header {
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .property-header h2 {
+            color: #333;
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+
+        .property-id {
+            color: #666;
+            font-size: 0.9em;
+            font-family: monospace;
+        }
+
+        .summary-text {
+            line-height: 1.8;
+            color: #444;
+            white-space: pre-line;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .summary-card h3 {
+            font-size: 0.75em;
+            margin-bottom: 10px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .summary-card .value {
+            font-size: 1.6em;
+            font-weight: 700;
+        }
+
+        .section-title {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: #f5f5f5;
+            font-weight: 600;
+            color: #333;
+        }
+
+        tr:hover {
+            background: #f9f9f9;
+        }
+
+        .price {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .type {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .type-sold {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .type-sale {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .ethnicity-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .ethnicity-label {
+            width: 200px;
+            font-size: 0.9em;
+        }
+
+        .ethnicity-progress {
+            flex: 1;
+            height: 25px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 0 10px;
+        }
+
+        .ethnicity-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s;
+        }
+
+        .ethnicity-percent {
+            width: 50px;
+            text-align: right;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .school-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .school-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+
+        .school-name {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .school-distance {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+        }
+
+        .school-details {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .school-badge {
+            background: white;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 0.85em;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+
+        .chart-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .chart-line {
+            fill: none;
+            stroke: #667eea;
+            stroke-width: 3;
+        }
+
+        .chart-dot {
+            fill: #667eea;
+        }
+
+        .chart-dot:hover {
+            fill: #764ba2;
+            r: 6;
+        }
+
+        .chart-grid {
+            stroke: #e0e0e0;
+            stroke-width: 1;
+        }
+
+        .chart-label {
+            font-size: 12px;
+            fill: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 Property Intelligence Dashboard</h1>
+            <p class="subtitle">Comprehensive property data, demographics, schools & history</p>
+            <div class="demo-note">
+                <strong>Demo Mode:</strong> Using sandbox API token.
+                Try example property ID: <span class="demo-id">GANSW704074813</span>
+            </div>
+        </div>
+
+        <div class="search-section">
+            <div class="search-box">
+                <input type="text" id="propertyInput" placeholder="Enter property ID (e.g., GANSW704074813)" value="GANSW704074813">
+                <button onclick="searchProperty()">Search</button>
+            </div>
+            <div class="loading" id="loading">Loading comprehensive property data...</div>
+            <div class="error" id="error"></div>
+        </div>
+
+        <div class="results" id="results">
+            <!-- Property Overview Card -->
+            <div class="card">
+                <div class="property-header">
+                    <h2 id="propertyAddress"></h2>
+                    <div class="property-id" id="propertyId"></div>
+                </div>
+            </div>
+
+            <!-- Property Summary Card -->
+            <div class="card" id="summaryCard" style="display:none;">
+                <h3 class="section-title">📋 Property Summary</h3>
+                <div class="summary-text" id="summaryText"></div>
+            </div>
+
+            <!-- Price Statistics Card -->
+            <div class="card">
+                <h3 class="section-title">💰 Price History</h3>
+                <div class="chart-container">
+                    <svg class="chart-svg" id="priceChart"></svg>
+                </div>
+                <div class="summary-grid" id="priceGrid"></div>
+            </div>
+
+            <!-- Schools Card -->
+            <div class="card" id="schoolsCard" style="display:none;">
+                <h3 class="section-title">🎓 Nearby Schools</h3>
+                <div class="summary-grid" id="schoolsStatsGrid"></div>
+                <div id="schoolsList"></div>
+            </div>
+
+            <!-- Demographics Card -->
+            <div class="card" id="demographicsCard" style="display:none;">
+                <h3 class="section-title">👥 Area Demographics</h3>
+                <div id="ethnicityBars"></div>
+            </div>
+
+            <!-- Sales History Card -->
+            <div class="card">
+                <h3 class="section-title">📈 Sales History</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function searchProperty() {
+            const propertyId = document.getElementById('propertyInput').value.trim();
+
+            if (!propertyId) {
+                showError('Please enter a property ID');
+                return;
+            }
+
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('error').classList.remove('active');
+
+            try {
+                const response = await fetch(`/api/property/${encodeURIComponent(propertyId)}/complete`);
+                const data = await response.json();
+
+                document.getElementById('loading').classList.remove('active');
+
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    showError('Failed to load property data');
+                }
+            } catch (error) {
+                document.getElementById('loading').classList.remove('active');
+                showError('Failed to fetch data: ' + error.message);
+            }
+        }
+
+        function displayResults(data) {
+            // Property Header
+            document.getElementById('propertyAddress').textContent = data.price_stats.address || 'Unknown Address';
+            document.getElementById('propertyId').textContent = `Property ID: ${data.property_id}`;
+
+            // Summary Text
+            if (data.summary_points) {
+                document.getElementById('summaryCard').style.display = 'block';
+                document.getElementById('summaryText').textContent = data.summary_points;
+            }
+
+            // Price Statistics and Chart
+            displayPriceChart(data.history);
+            displayPriceStats(data.price_stats);
+
+            // Schools
+            if (data.schools && data.schools.length > 0) {
+                displaySchools(data.schools, data.schools_summary);
+            }
+
+            // Demographics
+            if (data.ethnicity_summary && data.ethnicity_summary.top_ethnicities) {
+                displayDemographics(data.ethnicity_summary);
+            }
+
+            // History Table
+            displayHistoryTable(data.history);
+
+            document.getElementById('results').classList.add('active');
+        }
+
+        function displayPriceChart(history) {
+            const soldRecords = history.filter(h => h.price && h.type.toLowerCase().includes('sold'));
+            if (soldRecords.length === 0) return;
+
+            soldRecords.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            const svg = document.getElementById('priceChart');
+            const width = svg.clientWidth || 800;
+            const height = 300;
+            const padding = 60;
+
+            const prices = soldRecords.map(r => r.price);
+            const minPrice = Math.min(...prices);
+            const maxPrice = Math.max(...prices);
+            const priceRange = maxPrice - minPrice;
+
+            svg.innerHTML = '';
+
+            // Draw grid lines
+            for (let i = 0; i <= 4; i++) {
+                const y = padding + (height - 2 * padding) * i / 4;
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', padding);
+                line.setAttribute('y1', y);
+                line.setAttribute('x2', width - padding);
+                line.setAttribute('y2', y);
+                line.setAttribute('class', 'chart-grid');
+                svg.appendChild(line);
+
+                const priceLabel = maxPrice - (priceRange * i / 4);
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', padding - 10);
+                text.setAttribute('y', y + 5);
+                text.setAttribute('text-anchor', 'end');
+                text.setAttribute('class', 'chart-label');
+                text.textContent = '$' + Math.round(priceLabel / 1000) + 'k';
+                svg.appendChild(text);
+            }
+
+            // Draw line
+            const points = soldRecords.map((record, i) => {
+                const x = padding + (width - 2 * padding) * i / (soldRecords.length - 1);
+                const y = height - padding - ((record.price - minPrice) / priceRange) * (height - 2 * padding);
+                return `${x},${y}`;
+            }).join(' ');
+
+            const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+            polyline.setAttribute('points', points);
+            polyline.setAttribute('class', 'chart-line');
+            svg.appendChild(polyline);
+
+            // Draw dots and labels
+            soldRecords.forEach((record, i) => {
+                const x = padding + (width - 2 * padding) * i / (soldRecords.length - 1);
+                const y = height - padding - ((record.price - minPrice) / priceRange) * (height - 2 * padding);
+
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', x);
+                circle.setAttribute('cy', y);
+                circle.setAttribute('r', 5);
+                circle.setAttribute('class', 'chart-dot');
+                circle.innerHTML = `<title>$${record.price.toLocaleString()} - ${new Date(record.date).getFullYear()}</title>`;
+                svg.appendChild(circle);
+
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', x);
+                text.setAttribute('y', height - padding + 20);
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('class', 'chart-label');
+                text.textContent = new Date(record.date).getFullYear();
+                svg.appendChild(text);
+            });
+        }
+
+        function displayPriceStats(stats) {
+            const grid = document.getElementById('priceGrid');
+            grid.innerHTML = '';
+
+            if (stats.total_records) {
+                addStatCard(grid, 'Total Records', stats.total_records);
+            }
+            if (stats.latest_price) {
+                addStatCard(grid, 'Latest Price', '$' + stats.latest_price.toLocaleString());
+            }
+            if (stats.earliest_price) {
+                addStatCard(grid, 'Earliest Price', '$' + stats.earliest_price.toLocaleString());
+            }
+            if (stats.price_growth_percent !== undefined) {
+                const sign = stats.price_growth_percent >= 0 ? '+' : '';
+                addStatCard(grid, 'Price Growth', sign + stats.price_growth_percent + '%');
+            }
+            if (stats.median_price) {
+                addStatCard(grid, 'Median Price', '$' + stats.median_price.toLocaleString());
+            }
+            if (stats.avg_price) {
+                addStatCard(grid, 'Average Price', '$' + Math.round(stats.avg_price).toLocaleString());
+            }
+        }
+
+        function displaySchools(schools, summary) {
+            document.getElementById('schoolsCard').style.display = 'block';
+
+            // Schools summary stats
+            const statsGrid = document.getElementById('schoolsStatsGrid');
+            statsGrid.innerHTML = '';
+            addStatCard(statsGrid, 'Total Schools', summary.total_schools);
+            addStatCard(statsGrid, 'In Catchment', summary.in_catchment);
+            addStatCard(statsGrid, 'Primary', summary.primary);
+            addStatCard(statsGrid, 'Secondary', summary.secondary);
+            addStatCard(statsGrid, 'Public', summary.public);
+            addStatCard(statsGrid, 'Private', summary.private);
+
+            // Schools list
+            const schoolsList = document.getElementById('schoolsList');
+            schoolsList.innerHTML = '<h4 style="margin: 20px 0 15px 0; color: #333;">School Details</h4>';
+
+            schools.slice(0, 10).forEach(school => {
+                const card = document.createElement('div');
+                card.className = 'school-card';
+                card.innerHTML = `
+                    <div class="school-header">
+                        <div class="school-name">${school.name}</div>
+                        <div class="school-distance">${(school.distance / 1000).toFixed(1)} km</div>
+                    </div>
+                    <div class="school-details">
+                        <span class="school-badge">${school.school_level_type}</span>
+                        <span class="school-badge">${school.school_sector_type}</span>
+                        ${school.in_catchment === 'Yes' ? '<span class="school-badge" style="background:#d4edda;color:#155724;">In Catchment</span>' : ''}
+                        ${school.naplan_rank ? `<span class="school-badge">${school.naplan_rank}</span>` : ''}
+                    </div>
+                `;
+                schoolsList.appendChild(card);
+            });
+        }
+
+        function displayDemographics(summary) {
+            document.getElementById('demographicsCard').style.display = 'block';
+
+            const container = document.getElementById('ethnicityBars');
+            container.innerHTML = '';
+
+            summary.top_ethnicities.forEach(([ethnicity, percentage]) => {
+                const bar = document.createElement('div');
+                bar.className = 'ethnicity-bar';
+                bar.innerHTML = `
+                    <div class="ethnicity-label">${ethnicity}</div>
+                    <div class="ethnicity-progress">
+                        <div class="ethnicity-fill" style="width: ${(percentage * 100).toFixed(1)}%"></div>
+                    </div>
+                    <div class="ethnicity-percent">${(percentage * 100).toFixed(1)}%</div>
+                `;
+                container.appendChild(bar);
+            });
+        }
+
+        function displayHistoryTable(history) {
+            const historyBody = document.getElementById('historyBody');
+            historyBody.innerHTML = history.map(record => {
+                const typeClass = record.type.toLowerCase().includes('sold') ? 'type-sold' : 'type-sale';
+                const price = record.price ? '$' + record.price.toLocaleString() : 'N/A';
+                return `
+                    <tr>
+                        <td>${formatDate(record.date)}</td>
+                        <td><span class="type ${typeClass}">${record.type}</span></td>
+                        <td class="price">${price}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function addStatCard(container, label, value) {
+            const card = document.createElement('div');
+            card.className = 'summary-card';
+            card.innerHTML = `
+                <h3>${label}</h3>
+                <div class="value">${value}</div>
+            `;
+            container.appendChild(card);
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-AU', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('active');
+        }
+
+        document.getElementById('propertyInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') searchProperty();
+        });
+
+        window.addEventListener('load', function() {
+            searchProperty();
+        });
+    </script>
+</body>
+</html>
